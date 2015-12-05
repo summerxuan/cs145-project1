@@ -6,6 +6,10 @@ start = time.time()
 with open('train.json') as data_file:    
     data = json.load(data_file)
 
+##### PARAMETERS ######
+maxdepth = 500
+splitIng = True
+
 
 def getUniqueWords(allWords) :
     uniqueWords = [] 
@@ -14,19 +18,27 @@ def getUniqueWords(allWords) :
             uniqueWords.append(i)
     return uniqueWords
 dictionary = [];
-def featurize(data):
-    for d in data:
-        feat = []
-        ings = d["ingredients"]
-        for ing in ings:
-            for word in ing.strip().split(' '):
-                feat.append(word)
-        d["feat"] = feat
+def featurize(data, splitIng):
+    if splitIng:
+        for d in data:
+            feat = []
+            ings = d["ingredients"]
+            for ing in ings:
+                for word in ing.strip().split(' '):
+                    feat.append(word)
+            d["feat"] = feat
+    else:
+        for d in data:
+            feat = []
+            ings = d["ingredients"]
+            for ing in ings:
+                   feat.append(ing)
+            d["feat"] = feat        
 all_gredients = [];
 
 cuisine_data = []
 
-featurize(data);
+featurize(data, splitIng);
 n = len(data);
 for i in range(n):
         cuisine_data.append(data[i]["cuisine"])
@@ -56,13 +68,14 @@ for i in range(n):
 
 load_time = time.time()
 print str(load_time - start) + ": Finished loading training data"
+print str(len(dictionary))
 
 #read test data
 
 with open('test.json') as data_test_file:    
     data_test = json.load(data_test_file)
     n_test = len(data_test);
-featurize(data_test)
+featurize(data_test, splitIng)
 test_feature = [[0 for x in range(unique)] for x in range(n_test)] 
 
 for i in range(n_test):
@@ -76,7 +89,8 @@ for i in range(n_test):
 ######################################################################
 from sklearn import tree
 
-clf = tree.DecisionTreeClassifier()
+maxdepth = None
+clf = tree.DecisionTreeClassifier(max_depth=maxdepth)
 clf = clf.fit(train_feature, train_label)
 pred = clf.predict(test_feature)
 # unbroken ing ==> 370s to load training data, 0.61726 accuracy
